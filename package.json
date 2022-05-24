@@ -1,0 +1,22 @@
+{
+  "name": "mserver",
+  "version": "1.0.0",
+  "description": "Een message server.",
+  "main": "src/main.mjs",
+  "scripts": {
+    "start": "node ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/InformAR-MA/MServer.git"
+  },
+  "author": "MsZoezo",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/InformAR-MA/MServer/issues"
+  },
+  "homepage": "https://github.com/InformAR-MA/MServer#readme",
+  "dependencies": {
+    "ws": "^8.6.0"
+  }
+}
