@@ -3,95 +3,91 @@ import config from '../config.json' assert {type: 'json'};
 
 const wss = new WebSocketServer({ port: config.port });
 
+let wsCount = 0;
+
 wss.on('connection', (ws, req) => {
-    // De connectie moet zichzelf nog identificeren.
+    wsCount++;
+    ws.uid = wsCount;
+
     ws.identified = false;
-    ws.id = "";
+    ws.id = '';
+
+    console.log(`[${ws.uid}] Connected.`);
 
     ws.on('message', data => {
-        let timestamp = new Date().getTime();
+        console.log(`[${ws.uid}] Received: '${data.toString()}'`);
 
         let jsonData;
 
         try {
             jsonData = JSON.parse(data.toString());
         } catch {
-            ws.send(stringify({type: "response", success: false, message: "Message couldn't be parsed", code: 400, timestamp: timestamp}));
+            send(ws, {type: "error", reason: "Message couldn't be parsed", code: 101});
             return;
         }
 
-        if(!jsonData.hasOwnProperty('type')) {
-            ws.send(stringify({type: "response", success: false, message: `Missing property "type"`, code: 400, timestamp: timestamp}));
-            return;
-        }
+        if(!hasProperty(ws, jsonData, 'type')) return;
 
         switch (jsonData.type) {
             case "identify":
                 if(ws.identified) {
-                    ws.send(stringify({type: "response", success: false, message: `Already identified as "${ws.id}"`, code: 409, timestamp: timestamp}));
+                    send(ws, {type: "error", reason: `Already identified as "${ws.id}"`, code: 105});
                     return;
                 }
 
-                if(!jsonData.hasOwnProperty('id')) {
-                    ws.send(stringify({type: "response", success: false, message: `Missing property "id"`, code: 400, timestamp: timestamp}));
-                    return;
-                }
+                if(!hasProperty(ws, jsonData, 'id')) return; 
 
                 ws.id = jsonData.id;
                 ws.identified = true
 
-                ws.send(stringify({type: "response", success: true, message: `Successfully identified as "${ws.id}"`, code: 201, timestamp: timestamp}));
+                send(ws, {type: "identify", id: ws.id});
                 break;
         
             case "message":
                 if(!ws.identified) {
-                    ws.send(stringify({type: "response", success: false, message: `Not identified`, code: 401, timestamp: timestamp}));
+                    send(ws, {type: "error", reason: `Not identified`, code: 104});
                     return;
                 }
 
-                if(!jsonData.hasOwnProperty('recipient')) {
-                    ws.send(stringify({type: "response", success: false, message: `Missing property "recipient"`, code: 400, timestamp: timestamp}));
-                    return;
-                }
-
-                if(!jsonData.hasOwnProperty('data')) {
-                    ws.send(stringify({type: "response", success: false, message: `Missing property "data"`, code: 400, timestamp: timestamp}));
-                    return
-                }
+                if(!hasProperty(ws, jsonData, 'recipient') || !hasProperty(ws, jsonData, 'message')) return;
 
                 let success = false;
 
                 wss.clients.forEach(client => {
                     if(client.id == jsonData.recipient) {
-                        client.send(stringify({type: "message", data: jsonData.data, sender: ws.id, timestamp: timestamp}));
+                        send(client , {type: "message", message: jsonData.message, sender: ws.id, timestamp: timestamp});
                         success = true;
                         return;
                     }
                 });
 
-                if(!success) {
-                    ws.send(stringify({type: "response", success: false, message: "Recipient not found", code: 404, timestamp: timestamp}));
-                } else {
-                    ws.send(stringify({type: "response", success: true, message: "Succesfully send message", code: 200, timestamp: timestamp}));
-                }
+                if(!success) send(ws, {type: "error", reason: "Recipient not found", code: 106});
                 break;
-                
-            // case "broadcast":
-
-            //     break;
 
             default:
-                ws.send(stringify({type: "response", success: false, message: "Type not found", code: 404, timestamp: timestamp}));
+                send(ws, {type: "error", reason: "Type not found", code: 203});
                 break;
         }
     });
 
     ws.on('close', (code, reason) => {
-        console.log(`Disconnection -> [${ws.id}] ${code}, ${reason.toString()}`);
-
+        console.log(`[${ws.uid}] Disconnected.`);
     });
 });
 
-function stringify(json) {
-    return JSON.stringify(json);
+function hasProperty(ws, json, property) {
+    if(!json.hasOwnProperty(property)) {
+        console.log(`[${ws.uid}] missing property '${property}'`);
+        send(ws, {type: "error", reason: `Missing property '${property}'`, code: 102});
+        return false;
+    }
+
+    return true;
+}
+
+function send(ws, message) {
+    let data = JSON.stringify(message);
+
+    console.log(`[${ws.uid}] Send: '${data}'`);
+    ws.send(data);
 }
