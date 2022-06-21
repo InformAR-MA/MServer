@@ -1,6 +1,6 @@
 import { WebSocketServer } from 'ws';
 import { https } from 'https';
-import {fs } from 'fs';
+import fs from 'fs';
 import config from '../config.json' assert {type: 'json'};
 
 const server = https.createServer({
