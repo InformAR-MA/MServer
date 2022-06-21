@@ -1,3 +1,8 @@
 {
-    "port": 8080
+    "port": 8080,
+
+    "ssl": {
+        "key": "path-to-key",
+        "cert": "path-to-cert"
+    }
 }

@@ -4,11 +4,11 @@ import {fs } from 'fs';
 import config from '../config.json' assert {type: 'json'};
 
 const server = https.createServer({
-    key: fs.readFileSync('../ssl/privkey.pem', 'utf8'),
-    cert: fs.readFileSync('../ssl/fullchain.pem', 'utf8')
+    key: fs.readFileSync(config.ssl.key, 'utf8'),
+    cert: fs.readFileSync(config.ssl.cert, 'utf8')
 });
 
-server.listen(port);
+server.listen(config.port);
 
 const wss = new WebSocketServer({ server: server });
 
