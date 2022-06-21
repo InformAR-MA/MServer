@@ -1,5 +1,5 @@
 import { WebSocketServer } from 'ws';
-import { https } from 'https';
+import https from 'https';
 import fs from 'fs';
 import config from '../config.json' assert {type: 'json'};
 
