@@ -1,7 +1,16 @@
 import { WebSocketServer } from 'ws';
+import { https } from 'https';
+import {fs } from 'fs';
 import config from '../config.json' assert {type: 'json'};
 
-const wss = new WebSocketServer({ port: config.port });
+const server = https.createServer({
+    key: fs.readFileSync('../ssl/privkey.pem', 'utf8'),
+    cert: fs.readFileSync('../ssl/fullchain.pem', 'utf8')
+});
+
+server.listen(port);
+
+const wss = new WebSocketServer({ server: server });
 
 let wsCount = 0;
 
