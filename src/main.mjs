@@ -58,13 +58,13 @@ wss.on('connection', (ws, req) => {
                     return;
                 }
 
-                if(!hasProperty(ws, jsonData, 'recipient') || !hasProperty(ws, jsonData, 'message')) return;
+                if(!hasProperty(ws, jsonData, 'recipient') || !hasProperty(ws, jsonData, 'data')) return;
 
                 let success = false;
 
                 wss.clients.forEach(client => {
                     if(client.id == jsonData.recipient) {
-                        send(client , {type: "message", message: jsonData.message, sender: ws.id, timestamp: timestamp});
+                        send(client , {type: "message", data: jsonData.data, sender: ws.id});
                         success = true;
                         return;
                     }
