@@ -1,12 +1,19 @@
 import { WebSocketServer } from 'ws';
 import https from 'https';
+import http from 'http';
 import fs from 'fs';
 import config from '../config.json' assert {type: 'json'};
 
-const server = https.createServer({
-    key: fs.readFileSync(config.ssl.key, 'utf8'),
-    cert: fs.readFileSync(config.ssl.cert, 'utf8')
-});
+let server;
+
+if(config.secure) {
+    server = https.createServer({
+        key: fs.readFileSync(config.ssl.key, 'utf8'),
+        cert: fs.readFileSync(config.ssl.cert, 'utf8')
+    });
+} else {
+    server = http.createServer();
+}
 
 server.listen(config.port);
 
